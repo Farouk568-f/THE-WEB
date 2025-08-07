@@ -5,6 +5,7 @@ import { Movie, Episode } from '../types';
 import { useProfile } from '../contexts/ProfileContext';
 import { useTranslation } from '../contexts/LanguageContext';
 import { fetchStreamUrl, fetchFromTMDB } from '../services/apiService';
+import IntroPlayer from './IntroPlayer';
 import * as Icons from './Icons';
 import { IMAGE_BASE_URL, BACKDROP_SIZE_MEDIUM } from '../constants';
 
@@ -61,6 +62,10 @@ const VideoPlayer: React.FC<PlayerProps> = ({ item, itemType, initialSeason, ini
     
     const [availableStreams, setAvailableStreams] = useState<Stream[]>([]);
     const [currentStream, setCurrentStream] = useState<Stream | null>(null);
+    
+    // Intro states
+    const [showIntro, setShowIntro] = useState(true);
+    const [introEnabled, setIntroEnabled] = useState(true); // Can be controlled by user settings
 
     const isModalOpen = Object.values(modals).some(Boolean);
 
@@ -76,8 +81,18 @@ const VideoPlayer: React.FC<PlayerProps> = ({ item, itemType, initialSeason, ini
         controlsTimeoutRef.current = setTimeout(hideControls, 4000);
     }, [hideControls]);
 
+    // Check if intro should be shown
+    useEffect(() => {
+        // Only show intro for TV shows and if intro is enabled
+        const shouldShowIntro = itemType === 'tv' && introEnabled && !initialStreamUrl;
+        setShowIntro(shouldShowIntro);
+    }, [itemType, introEnabled, initialStreamUrl]);
+
     // Effect for fetching stream data
     useEffect(() => {
+        // Don't fetch streams if intro is showing
+        if (showIntro && introEnabled) return;
+
         const fetchAndSetStreams = async () => {
             setIsBuffering(true);
             if (initialStreamUrl) {
@@ -117,7 +132,7 @@ const VideoPlayer: React.FC<PlayerProps> = ({ item, itemType, initialSeason, ini
         };
 
         if (item) fetchAndSetStreams();
-    }, [item, itemType, initialSeason, initialEpisode, initialStreamUrl, setToast, t]);
+    }, [item, itemType, initialSeason, initialEpisode, initialStreamUrl, setToast, t, showIntro, introEnabled]);
     
     // Effect for handling video source changes and autoplay
     useEffect(() => {
@@ -302,45 +317,65 @@ const VideoPlayer: React.FC<PlayerProps> = ({ item, itemType, initialSeason, ini
         setModals({ settings: false, subtitles: false });
     };
 
+    const handleIntroEnd = () => {
+        setShowIntro(false);
+    };
+
+    const handleSkipIntro = () => {
+        setShowIntro(false);
+    };
+
     return (
         <div ref={playerContainerRef} className="relative w-full h-full bg-black flex items-center justify-center overflow-hidden cursor-none" onClick={handleContainerClick} onTouchStart={handleDoubleTap}>
-            <video
-                ref={videoRef}
-                className="w-full h-full object-contain"
-                playsInline
-                muted={false}
-                crossOrigin="anonymous"
-                poster={item.backdrop_path ? `${IMAGE_BASE_URL}${BACKDROP_SIZE_MEDIUM}${item.backdrop_path}` : ''}
-                preload="auto"
-            />
-
-            {isBuffering && <div className="absolute w-12 h-12 border-4 border-t-transparent border-white rounded-full animate-spin z-20 pointer-events-none"></div>}
-
-            <div className={`absolute inset-0 bg-gradient-to-t from-black/70 to-transparent z-10 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'} pointer-events-none`}></div>
-
-            <div className={`absolute inset-0 transition-opacity duration-300 z-20 ${showControls ? 'opacity-100' : 'opacity-0'} ${isModalOpen ? 'pointer-events-none' : 'pointer-events-auto'}`}>
-                <Controls
-                    isPlaying={isPlaying}
-                    isFav={isFav}
-                    itemType={itemType}
-                    currentTime={currentTime}
-                    duration={duration}
-                    buffered={buffered}
+            {showIntro && introEnabled ? (
+                <IntroPlayer
+                    onIntroEnd={handleIntroEnd}
+                    onSkipIntro={handleSkipIntro}
                     isFullscreen={isFullscreen}
-                    togglePlay={togglePlay}
-                    handleSeek={handleSeek}
-                    handleProgressChange={handleProgressChange}
                     toggleFullscreen={toggleFullscreen}
-                    handleEnterPip={handleEnterPip}
-                    openModal={openModal}
-                    onEpisodesButtonClick={onEpisodesButtonClick}
                     navigate={navigate}
-                    onToggleFavorite={onToggleFavorite}
-                    onShare={onShare}
-                    onDownload={onDownload}
-                    t={t}
                 />
-            </div>
+            ) : (
+                <>
+                    <video
+                        ref={videoRef}
+                        className="w-full h-full object-contain"
+                        playsInline
+                        muted={false}
+                        crossOrigin="anonymous"
+                        poster={item.backdrop_path ? `${IMAGE_BASE_URL}${BACKDROP_SIZE_MEDIUM}${item.backdrop_path}` : ''}
+                        preload="auto"
+                    />
+
+                    {isBuffering && <div className="absolute w-12 h-12 border-4 border-t-transparent border-white rounded-full animate-spin z-20 pointer-events-none"></div>}
+
+                    <div className={`absolute inset-0 bg-gradient-to-t from-black/70 to-transparent z-10 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'} pointer-events-none`}></div>
+
+                    <div className={`absolute inset-0 transition-opacity duration-300 z-20 ${showControls ? 'opacity-100' : 'opacity-0'} ${isModalOpen ? 'pointer-events-none' : 'pointer-events-auto'}`}>
+                        <Controls
+                            isPlaying={isPlaying}
+                            isFav={isFav}
+                            itemType={itemType}
+                            currentTime={currentTime}
+                            duration={duration}
+                            buffered={buffered}
+                            isFullscreen={isFullscreen}
+                            togglePlay={togglePlay}
+                            handleSeek={handleSeek}
+                            handleProgressChange={handleProgressChange}
+                            toggleFullscreen={toggleFullscreen}
+                            handleEnterPip={handleEnterPip}
+                            openModal={openModal}
+                            onEpisodesButtonClick={onEpisodesButtonClick}
+                            navigate={navigate}
+                            onToggleFavorite={onToggleFavorite}
+                            onShare={onShare}
+                            onDownload={onDownload}
+                            t={t}
+                        />
+                    </div>
+                </>
+            )}
 
             {isModalOpen &&
                 <div className="absolute inset-0 bg-black/60 z-30 pointer-events-auto" onClick={(e) => { e.stopPropagation(); setModals({ settings: false, subtitles: false }) }}>
@@ -353,6 +388,15 @@ const VideoPlayer: React.FC<PlayerProps> = ({ item, itemType, initialSeason, ini
                                     <div className="flex flex-wrap gap-2">
                                         {[0.5, 1, 1.5, 2].map(rate => <button key={rate} onClick={() => { if (videoRef.current) videoRef.current.playbackRate = rate; setPlaybackRate(rate); }} className={`w-16 px-3 py-2 text-sm rounded-lg font-bold transition-colors ${playbackRate === rate ? 'bg-[var(--primary)] text-white' : 'bg-white/10 text-gray-300'}`}>{rate}x</button>)}
                                     </div>
+                                </div>
+                                <div className="pt-4 mt-4 border-t border-white/10">
+                                    <h4 className="mb-3 font-semibold text-lg">{t('introSettings')}</h4>
+                                    <button 
+                                        onClick={() => setIntroEnabled(!introEnabled)}
+                                        className={`w-full px-3 py-2 text-sm rounded-lg font-bold text-start transition-colors ${introEnabled ? 'bg-[var(--primary)] text-white' : 'bg-white/10 text-gray-300'}`}
+                                    >
+                                        {introEnabled ? t('introEnabled') : t('introDisabled')}
+                                    </button>
                                 </div>
                                 {availableStreams.length > 0 && (
                                     <div className="pt-4 mt-4 border-t border-white/10">

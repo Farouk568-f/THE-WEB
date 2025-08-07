@@ -127,6 +127,13 @@ export const translations = {
     'auto': 'Auto',
     'safeMode': 'Safe Mode',
     'safeModeDescription': 'Automatically blur potentially inappropriate content.',
+    
+    // Intro
+    'intro': 'Intro',
+    'skipIntro': 'Skip Intro',
+    'introSettings': 'Intro Settings',
+    'introEnabled': 'Intro Enabled',
+    'introDisabled': 'Intro Disabled',
 
     // ProfilePage
     'whoIsWatching': "Who's watching?",
@@ -320,6 +327,13 @@ export const translations = {
     'auto': 'تلقائي',
     'safeMode': 'الوضع الآمن',
     'safeModeDescription': 'تمويه المحتوى الذي قد يكون غير لائق تلقائياً.',
+    
+    // Intro
+    'intro': 'الانترو',
+    'skipIntro': 'تخطي الانترو',
+    'introSettings': 'إعدادات الانترو',
+    'introEnabled': 'الانترو مفعّل',
+    'introDisabled': 'الانترو معطّل',
 
     // ProfilePage
     'whoIsWatching': 'من يشاهد؟',
