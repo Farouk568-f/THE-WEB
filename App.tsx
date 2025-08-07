@@ -16,6 +16,7 @@ import { LanguageProvider } from './contexts/LanguageContext';
 import { PlayerProvider } from './contexts/PlayerContext';
 import { ToastContainer } from './components/common';
 import PipPlayer from './components/PipPlayer';
+import IntroPreloader from './components/IntroPreloader';
 import { useTranslation } from './contexts/LanguageContext';
 
 const GenericPageWrapper: React.FC<{ pageType: 'favorites' | 'downloads' | 'search' | 'all' | 'subscriptions' }> = ({ pageType }) => {
@@ -53,6 +54,7 @@ const App: React.FC = () => {
               <Route path="/subscriptions" element={<GenericPageWrapper pageType="subscriptions" />} />
             </Routes>
             <PipPlayer />
+            <IntroPreloader />
           </PlayerProvider>
         </HashRouter>
         <ToastContainer />

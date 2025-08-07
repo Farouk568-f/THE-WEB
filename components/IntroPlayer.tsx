@@ -58,22 +58,37 @@ const IntroPlayer: React.FC<IntroPlayerProps> = ({
         const video = videoRef.current;
         if (!video) return;
 
-        // Set intro video source
+        // Set intro video source with preload
         video.src = '/intro.mp4';
+        video.preload = 'auto'; // Force preload
         video.load();
 
-        // Start playing automatically
-        const playPromise = video.play();
-        if (playPromise !== undefined) {
-            playPromise.then(() => {
-                setIsPlaying(true);
-                setIsBuffering(false);
-            }).catch(error => {
-                console.log("Autoplay was prevented.", error);
-                setIsPlaying(false);
-                setIsBuffering(false);
-            });
-        }
+        // Wait for video to be sufficiently loaded before playing
+        const onCanPlay = () => {
+            setIsBuffering(false);
+            const playPromise = video.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    setIsPlaying(true);
+                }).catch(error => {
+                    console.log("Autoplay was prevented.", error);
+                    setIsPlaying(false);
+                });
+            }
+            video.removeEventListener('canplay', onCanPlay);
+        };
+
+        const onLoadStart = () => {
+            setIsBuffering(true);
+        };
+
+        video.addEventListener('canplay', onCanPlay);
+        video.addEventListener('loadstart', onLoadStart);
+
+        return () => {
+            video.removeEventListener('canplay', onCanPlay);
+            video.removeEventListener('loadstart', onLoadStart);
+        };
     }, []);
 
     // Show skip button after 3 seconds and start countdown
@@ -195,6 +210,7 @@ const IntroPlayer: React.FC<IntroPlayerProps> = ({
                 muted={false}
                 crossOrigin="anonymous"
                 preload="auto"
+                poster=""
             />
 
             {isBuffering && (

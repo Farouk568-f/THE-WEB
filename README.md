@@ -17,8 +17,10 @@ This contains everything you need to run your app locally.
 ## Features
 
 ### Intro Player
+- **Preloaded intro video** for instant playback when needed
 - Automatic intro playback for TV series before episode starts
 - Skip intro button with 5-second countdown
 - Integrated with main player controls
 - User settings to enable/disable intro
 - Seamless transition from intro to episode content
+- **Background preloading** on app startup for better performance
