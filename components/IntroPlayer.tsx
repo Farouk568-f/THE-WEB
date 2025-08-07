@@ -89,6 +89,10 @@ const IntroPlayer: React.FC<IntroPlayerProps> = ({
                 
                 if (countdown <= 0) {
                     clearInterval(countdownInterval);
+                    // Clear the countdown interval
+                    if (skipTimeoutRef.current) {
+                        clearInterval(skipTimeoutRef.current);
+                    }
                     onSkipIntro();
                 }
             }, 1000);
@@ -147,7 +151,13 @@ const IntroPlayer: React.FC<IntroPlayerProps> = ({
             setIsBuffering(false);
             resetControlsTimeout();
         };
-        const onEnded = () => onIntroEnd();
+        const onEnded = () => {
+            // Clear any timeouts before ending intro
+            if (skipTimeoutRef.current) {
+                clearInterval(skipTimeoutRef.current);
+            }
+            onIntroEnd();
+        };
 
         video.addEventListener('play', onPlay);
         video.addEventListener('pause', onPause);
@@ -195,7 +205,13 @@ const IntroPlayer: React.FC<IntroPlayerProps> = ({
             {showSkipButton && (
                 <div className="absolute top-4 right-4 z-30 pointer-events-auto">
                     <button 
-                        onClick={onSkipIntro}
+                        onClick={() => {
+                            // Clear the countdown interval
+                            if (skipTimeoutRef.current) {
+                                clearInterval(skipTimeoutRef.current);
+                            }
+                            onSkipIntro();
+                        }}
                         className="flex items-center gap-2 px-4 py-2 bg-black/70 text-white rounded-full font-medium transition-all hover:bg-black/90"
                     >
                         <span>{t('skipIntro')}</span>
@@ -258,7 +274,13 @@ const IntroPlayer: React.FC<IntroPlayerProps> = ({
                                     {isPlaying ? <Icons.PauseIcon className="w-6 h-6" /> : <Icons.PlayIcon className="w-6 h-6" />}
                                 </button>
                                 <button 
-                                    onClick={onSkipIntro}
+                                    onClick={() => {
+                                        // Clear the countdown interval
+                                        if (skipTimeoutRef.current) {
+                                            clearInterval(skipTimeoutRef.current);
+                                        }
+                                        onSkipIntro();
+                                    }}
                                     className="px-3 py-1 text-sm bg-white/10 rounded-md transition-colors hover:bg-white/20"
                                 >
                                     {t('skipIntro')}

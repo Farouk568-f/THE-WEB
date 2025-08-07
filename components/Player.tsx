@@ -137,28 +137,48 @@ const VideoPlayer: React.FC<PlayerProps> = ({ item, itemType, initialSeason, ini
     // Effect for handling video source changes and autoplay
     useEffect(() => {
         const video = videoRef.current;
-        if (!video || !currentStream) return;
+        if (!video || !currentStream || showIntro) return;
 
-        const savedTime = video.currentTime > 0 ? video.currentTime : initialTime || 0;
+        console.log("Setting up main video after intro");
         
-        video.src = currentStream.url;
+        // Clear any existing source first
+        video.src = '';
         video.load();
+        
+        // Small delay to ensure clean state
+        const timer = setTimeout(() => {
+            const videoElement = videoRef.current;
+            if (videoElement && currentStream) {
+                const savedTime = initialTime || 0;
+                
+                videoElement.src = currentStream.url;
+                videoElement.load();
 
-        // More optimistic playback to start faster
-        const playPromise = video.play();
-        if (playPromise !== undefined) {
-            playPromise.then(() => {
-                if (videoRef.current) {
-                    videoRef.current.currentTime = savedTime;
-                }
-                setIsPlaying(true);
-            }).catch(error => {
-                console.log("Autoplay was prevented.", error);
-                setIsPlaying(false);
-            });
-        }
+                // Wait for video to be ready before playing
+                const onLoadedData = () => {
+                    const playPromise = videoElement.play();
+                    if (playPromise !== undefined) {
+                        playPromise.then(() => {
+                            if (savedTime > 0) {
+                                videoElement.currentTime = savedTime;
+                            }
+                            setIsPlaying(true);
+                            setIsBuffering(false);
+                        }).catch(error => {
+                            console.log("Autoplay was prevented.", error);
+                            setIsPlaying(false);
+                            setIsBuffering(false);
+                        });
+                    }
+                    videoElement.removeEventListener('loadeddata', onLoadedData);
+                };
 
-    }, [currentStream, initialTime]);
+                videoElement.addEventListener('loadeddata', onLoadedData);
+            }
+        }, 200);
+
+        return () => clearTimeout(timer);
+    }, [currentStream, initialTime, showIntro]);
 
     const togglePlay = useCallback(() => {
         const video = videoRef.current;
@@ -255,7 +275,7 @@ const VideoPlayer: React.FC<PlayerProps> = ({ item, itemType, initialSeason, ini
 
     useEffect(() => {
         const video = videoRef.current;
-        if (!video) return;
+        if (!video || showIntro) return; // Don't attach listeners when intro is showing
 
         const onPlay = () => setIsPlaying(true);
         const onPause = () => setIsPlaying(false);
@@ -278,6 +298,7 @@ const VideoPlayer: React.FC<PlayerProps> = ({ item, itemType, initialSeason, ini
         video.addEventListener('playing', onPlaying);
         video.addEventListener('progress', onProgress);
         
+        // Update initial states
         setIsPlaying(!video.paused);
         setCurrentTime(video.currentTime);
         setDuration(video.duration || 0);
@@ -293,11 +314,13 @@ const VideoPlayer: React.FC<PlayerProps> = ({ item, itemType, initialSeason, ini
             video.removeEventListener('progress', onProgress);
             document.removeEventListener('fullscreenchange', handleFullscreenChange);
         };
-    }, [resetControlsTimeout]);
+    }, [resetControlsTimeout, showIntro]);
 
     useEffect(() => {
         resetControlsTimeout();
     }, [resetControlsTimeout]);
+
+
 
     const handleEnterPip = () => {
         if (videoRef.current && currentStream && playerContainerRef.current) {
@@ -319,10 +342,26 @@ const VideoPlayer: React.FC<PlayerProps> = ({ item, itemType, initialSeason, ini
 
     const handleIntroEnd = () => {
         setShowIntro(false);
+        // Reset states for main video
+        setIsBuffering(true);
+        setCurrentTime(0);
+        setDuration(0);
+        setBuffered(0);
+        setIsPlaying(false);
+        setShowControls(true);
+        resetControlsTimeout();
     };
 
     const handleSkipIntro = () => {
         setShowIntro(false);
+        // Reset states for main video  
+        setIsBuffering(true);
+        setCurrentTime(0);
+        setDuration(0);
+        setBuffered(0);
+        setIsPlaying(false);
+        setShowControls(true);
+        resetControlsTimeout();
     };
 
     return (
