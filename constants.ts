@@ -7,4 +7,4 @@ export const BACKDROP_SIZE = "w1280";
 export const BACKDROP_SIZE_MEDIUM = "w780";
 
 // IMPORTANT: This is the new backend URL for fetching stream links.
-export const SCRAPER_API_URL = "https://2b9c0a86a230.ngrok-free.app/scrape";
+export const SCRAPER_API_URL = "https://8ce075f93ea4.ngrok-free.app/scrape";
