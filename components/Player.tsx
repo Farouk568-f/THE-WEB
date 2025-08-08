@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Movie, Episode } from '../types';
@@ -6,7 +5,7 @@ import { useProfile } from '../contexts/ProfileContext';
 import { useTranslation } from '../contexts/LanguageContext';
 import { fetchStreamUrl, fetchFromTMDB } from '../services/apiService';
 import IntroPlayer from './IntroPlayer';
-import * as Icons from './Icons';
+import * as Icons from './Icons'; // تأكد أن هذا الملف يحتوي على Rewind10Icon و Forward10Icon
 import { IMAGE_BASE_URL, BACKDROP_SIZE_MEDIUM } from '../constants';
 
 interface Stream {
@@ -103,12 +102,8 @@ const VideoPlayer: React.FC<PlayerProps> = ({ item, itemType, initialSeason, ini
                 return;
             }
             try {
-                // To ensure the scraper works for all languages, fetch the English title.
-                // The backend scraper is optimized for English titles.
                 const englishDetails = await fetchFromTMDB(`/${itemType}/${item.id}`, { language: 'en-US' });
                 const englishTitle = englishDetails.title || englishDetails.name;
-
-                // Use the fetched English title if available, otherwise fallback to the original title from the item prop.
                 const titleToScrape = englishTitle || item.original_title || item.original_name || item.name || item.title;
                 
                 if (!englishTitle) {
@@ -141,11 +136,9 @@ const VideoPlayer: React.FC<PlayerProps> = ({ item, itemType, initialSeason, ini
 
         console.log("Setting up main video after intro");
         
-        // Clear any existing source first
         video.src = '';
         video.load();
         
-        // Small delay to ensure clean state
         const timer = setTimeout(() => {
             const videoElement = videoRef.current;
             if (videoElement && currentStream) {
@@ -154,7 +147,6 @@ const VideoPlayer: React.FC<PlayerProps> = ({ item, itemType, initialSeason, ini
                 videoElement.src = currentStream.url;
                 videoElement.load();
 
-                // Wait for video to be ready before playing
                 const onLoadedData = () => {
                     const playPromise = videoElement.play();
                     if (playPromise !== undefined) {
@@ -275,7 +267,7 @@ const VideoPlayer: React.FC<PlayerProps> = ({ item, itemType, initialSeason, ini
 
     useEffect(() => {
         const video = videoRef.current;
-        if (!video || showIntro) return; // Don't attach listeners when intro is showing
+        if (!video || showIntro) return;
 
         const onPlay = () => setIsPlaying(true);
         const onPause = () => setIsPlaying(false);
@@ -298,7 +290,6 @@ const VideoPlayer: React.FC<PlayerProps> = ({ item, itemType, initialSeason, ini
         video.addEventListener('playing', onPlaying);
         video.addEventListener('progress', onProgress);
         
-        // Update initial states
         setIsPlaying(!video.paused);
         setCurrentTime(video.currentTime);
         setDuration(video.duration || 0);
@@ -342,7 +333,6 @@ const VideoPlayer: React.FC<PlayerProps> = ({ item, itemType, initialSeason, ini
 
     const handleIntroEnd = () => {
         setShowIntro(false);
-        // Reset states for main video
         setIsBuffering(true);
         setCurrentTime(0);
         setDuration(0);
@@ -354,7 +344,6 @@ const VideoPlayer: React.FC<PlayerProps> = ({ item, itemType, initialSeason, ini
 
     const handleSkipIntro = () => {
         setShowIntro(false);
-        // Reset states for main video  
         setIsBuffering(true);
         setCurrentTime(0);
         setDuration(0);
@@ -478,16 +467,23 @@ const Controls: React.FC<any> = ({
             </div>
         </div>
 
+        {/* ==================== الجزء الذي تم تعديله ==================== */}
         {/* Middle Controls (Fullscreen only) */}
         {isFullscreen &&
             <div className="flex items-center justify-center gap-x-12 pointer-events-auto">
-                <button onClick={() => handleSeek(false)} className="text-4xl"><Icons.RewindIcon className="w-10 h-10" /></button>
+                <button onClick={() => handleSeek(false)} className="text-4xl">
+                    <Icons.Rewind10Icon className="w-10 h-10" />
+                </button>
                 <button onClick={togglePlay} className="text-6xl transform transition-transform">
                     {isPlaying ? <Icons.PauseIcon className="w-16 h-16" /> : <Icons.PlayIcon className="w-16 h-16" />}
                 </button>
-                <button onClick={() => handleSeek(true)} className="text-4xl"><Icons.ForwardIcon className="w-10 h-10" /></button>
+                <button onClick={() => handleSeek(true)} className="text-4xl">
+                <Icons.Forward10Icon className="w-10 h-10" style={{ transform: 'scaleX(-1)' }} />
+
+                </button>
             </div>
         }
+        {/* ========================================================== */}
 
         {/* Bottom Controls */}
         <div className="pointer-events-auto">
